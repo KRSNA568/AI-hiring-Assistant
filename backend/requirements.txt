@@ -1,0 +1,25 @@
+# Backend dependencies
+fastapi>=0.111.0
+uvicorn[standard]>=0.30.0
+python-multipart>=0.0.9
+
+# LangGraph + LangChain
+langgraph>=0.1.0
+langchain>=0.2.0
+langchain-openai>=0.1.0
+
+# Groq via OpenAI SDK (no separate groq package needed — uses base_url override)
+openai>=1.30.0
+
+# Local Embeddings (FREE — no API key required)
+sentence-transformers>=3.0.0
+
+# Document Parsing
+pdfplumber>=0.11.0
+python-docx>=1.1.0
+
+# Utilities
+python-dotenv>=1.0.0
+tenacity>=8.3.0
+pydantic>=2.7.0
+numpy>=1.26.0
