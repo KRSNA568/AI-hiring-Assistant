@@ -5,22 +5,21 @@ import {
   AlertCircle, UploadCloud, X, Plus, Download, ChevronDown, Activity,
   FileBox, UserCheck, AlertTriangle, Users
 } from 'lucide-react'
-import './App.css'
 
 const API_BASE = 'http://localhost:8000'
 const MIN_JD_LENGTH = 30
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
-function scoreClass(score) {
-  if (score >= 75) return 'strong'
-  if (score >= 50) return 'moderate'
-  return 'weak'
+function scoreColor(score) {
+  if (score >= 75) return 'bg-emerald-100 text-emerald-800'
+  if (score >= 50) return 'bg-amber-100 text-amber-800'
+  return 'bg-red-100 text-red-800'
 }
 
 function RecLabel({ rec }) {
-  if (rec === 'Strong Fit') return <span className="rec-label strong"><CheckCircle2 size={16} /> Strong Fit</span>
-  if (rec === 'Moderate Fit') return <span className="rec-label moderate"><AlertTriangle size={16} /> Moderate Fit</span>
-  return <span className="rec-label weak"><X size={16} /> Not a Fit</span>
+  if (rec === 'Strong Fit') return <span className="flex items-center gap-1.5 text-sm font-medium text-emerald-600"><CheckCircle2 size={16} /> Strong Fit</span>
+  if (rec === 'Moderate Fit') return <span className="flex items-center gap-1.5 text-sm font-medium text-amber-500"><AlertTriangle size={16} /> Moderate Fit</span>
+  return <span className="flex items-center gap-1.5 text-sm font-medium text-red-500"><X size={16} /> Not a Fit</span>
 }
 
 function downloadCSV(candidates) {
@@ -43,13 +42,12 @@ class ErrorBoundary extends Component {
   static getDerivedStateFromError(error) { return { hasError: true, error } }
   render() {
     if (this.state.hasError) return (
-      <div className="error-box" style={{ margin: '2rem' }}>
-        <AlertCircle size={20} />
+      <div className="flex items-start gap-2 bg-red-50 border-l-4 border-red-500 text-red-700 p-4 m-8 rounded-r-md text-sm shadow-sm">
+        <AlertCircle size={20} className="mt-0.5" />
         <div>
-          <strong>System Error:</strong> {this.state.error?.message}
+          <strong className="block mb-1">System Error:</strong> {this.state.error?.message}
           <button
-            className="btn-outline"
-            style={{ padding: '0.3rem 0.8rem', marginTop: '0.5rem', display: 'block' }}
+            className="mt-3 px-3 py-1.5 bg-white border border-slate-300 text-slate-700 rounded shadow-sm hover:bg-slate-50 transition-colors text-xs font-medium"
             onClick={() => this.setState({ hasError: false })}
           >
             Retry
@@ -66,18 +64,21 @@ function CandidateCard({ candidate, defaultOpen }) {
   const [open, setOpen] = useState(defaultOpen)
 
   return (
-    <div className="candidate-card">
-      <div className="card-header" onClick={() => setOpen(o => !o)}>
-        <div className="card-title-area">
-          <span className={`rank-badge ${candidate.ranking === 1 ? 'top-rank' : ''}`}>
+    <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden transition-all duration-200">
+      <div 
+        className="flex justify-between items-center p-5 cursor-pointer hover:bg-slate-50 select-none"
+        onClick={() => setOpen(o => !o)}
+      >
+        <div className="flex items-center gap-4">
+          <span className={`flex items-center justify-center w-7 h-7 rounded-md text-xs font-bold ${candidate.ranking === 1 ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600'}`}>
             {candidate.ranking}
           </span>
           <div>
-            <div className="card-name">{candidate.name}</div>
-            <div className="card-meta">
+            <div className="text-base font-semibold text-slate-900">{candidate.name}</div>
+            <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
               <span>{candidate.file_name}</span>
               <span>•</span>
-              <span className={`score-pill ${scoreClass(candidate.match_score)}`}>
+              <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-xs font-bold ${scoreColor(candidate.match_score)}`}>
                 {candidate.match_score}/100
               </span>
               <span>•</span>
@@ -85,18 +86,34 @@ function CandidateCard({ candidate, defaultOpen }) {
             </div>
           </div>
         </div>
-        <ChevronDown size={20} className={`card-icon ${open ? 'open' : ''}`} />
+        <ChevronDown size={20} className={`text-slate-400 transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
       </div>
 
       {open && (
-        <div className="card-body">
-          <div className="analysis-section strengths">
-            <h5><CheckCircle2 size={16} /> Key Strengths</h5>
-            <ul>{(candidate.strengths || []).map((s, i) => <li key={i}>{s}</li>)}</ul>
+        <div className="px-6 pb-6 pt-2 border-t border-slate-100 grid md:grid-cols-2 gap-8">
+          <div>
+            <h5 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-emerald-600 mb-3">
+              <CheckCircle2 size={16} /> Key Strengths
+            </h5>
+            <ul className="space-y-2.5">
+              {(candidate.strengths || []).map((s, i) => (
+                <li key={i} className="text-sm text-slate-700 pl-4 relative before:absolute before:left-0 before:top-1.5 before:w-1.5 before:h-1.5 before:rounded-full before:bg-emerald-500 leading-relaxed">
+                  {s}
+                </li>
+              ))}
+            </ul>
           </div>
-          <div className="analysis-section gaps">
-            <h5><AlertTriangle size={16} /> Identified Gaps</h5>
-            <ul>{(candidate.gaps || []).map((g, i) => <li key={i}>{g}</li>)}</ul>
+          <div>
+            <h5 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-600 mb-3">
+              <AlertTriangle size={16} /> Identified Gaps
+            </h5>
+            <ul className="space-y-2.5">
+              {(candidate.gaps || []).map((g, i) => (
+                <li key={i} className="text-sm text-slate-700 pl-4 relative before:absolute before:left-0 before:top-1.5 before:w-1.5 before:h-1.5 before:rounded-full before:bg-amber-500 leading-relaxed">
+                  {g}
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       )}
@@ -107,9 +124,13 @@ function CandidateCard({ candidate, defaultOpen }) {
 // ── Loading Skeleton ──────────────────────────────────────────────────────────
 function LoadingSkeleton({ count }) {
   return (
-    <div className="skeleton-container">
+    <div className="flex flex-col gap-3 mt-6">
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="skeleton-bar" style={{ animationDelay: `${i * 0.15}s` }} />
+        <div 
+          key={i} 
+          className="h-[72px] bg-slate-100 rounded-lg animate-pulse" 
+          style={{ animationDelay: `${i * 0.15}s` }} 
+        />
       ))}
     </div>
   )
@@ -135,11 +156,9 @@ export default function App() {
     )
     const tooBig = incoming.filter(f => f.size > 10 * 1024 * 1024)
 
-    if (tooBig.length) {
-      setError(`${tooBig.map(f => f.name).join(', ')} exceed 10 MB and were skipped.`)
-    } else {
-      setError('')
-    }
+    if (tooBig.length) setError(`${tooBig.map(f => f.name).join(', ')} exceed 10 MB and were skipped.`)
+    else setError('')
+    
     setFiles(prev => [...prev, ...valid.filter(f => f.size <= 10 * 1024 * 1024)])
   }
 
@@ -147,8 +166,6 @@ export default function App() {
     e.preventDefault(); setIsDrag(false)
     addFiles(Array.from(e.dataTransfer.files))
   }, [])
-
-  const handleFileInput = (e) => { addFiles(Array.from(e.target.files)); e.target.value = '' }
 
   const handleAnalyze = async () => {
     if (!canRun) return
@@ -167,8 +184,7 @@ export default function App() {
       setResults(data)
       setStatus('Analysis Complete')
     } catch (err) {
-      const msg = err.response?.data?.detail || err.message || 'Unknown error'
-      setError(msg)
+      setError(err.response?.data?.detail || err.message || 'Unknown error')
       setStatus('')
     } finally {
       setLoading(false)
@@ -177,64 +193,78 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      <div className="app">
+      <div className="flex min-h-screen bg-slate-50 text-slate-900 font-sans">
+        
         {/* ── Sidebar ── */}
-        <aside className="sidebar">
-          <div className="sidebar-brand">
-            <div className="sidebar-title">
-              <BrainCircuit size={24} color="#6366f1" />
+        <aside className="w-72 bg-slate-900 text-slate-50 p-10 flex flex-col gap-10 shrink-0 border-r border-slate-800">
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2.5 text-lg font-bold text-white tracking-tight">
+              <BrainCircuit size={26} className="text-indigo-400" />
               AI Hiring Assistant
             </div>
-            <div className="sidebar-subtitle">Autonomous Screening</div>
+            <div className="text-xs text-slate-400 pl-9 font-medium uppercase tracking-widest">Autonomous Screening</div>
           </div>
 
-          <div className="sidebar-section">
-            <h3>Configuration</h3>
-            <div className="status-badge">
+          <div>
+            <h3 className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-4">Configuration</h3>
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-md text-xs font-bold">
               <Activity size={14} /> Intelligence Active
             </div>
           </div>
 
-          <div className="sidebar-section">
-            <h3>Pipeline Sequence</h3>
-            <ul className="how-it-works">
-              <li><FileText size={16} className="step-icon" /> <span><strong>Ingest</strong> — Parse document</span></li>
-              <li><Search size={16} className="step-icon" /> <span><strong>Extract</strong> — Structured entities</span></li>
-              <li><LayoutDashboard size={16} className="step-icon" /> <span><strong>Analyze</strong> — Gaps & fit logic</span></li>
-              <li><Settings size={16} className="step-icon" /> <span><strong>Grade</strong> — 100% LLM Scored</span></li>
+          <div>
+            <h3 className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-4">Pipeline Sequence</h3>
+            <ul className="flex flex-col gap-4">
+              <li className="flex items-start gap-3 text-sm text-slate-300">
+                <FileText size={18} className="text-indigo-400 shrink-0" />
+                <span><strong className="text-slate-100">Ingest</strong> — Parse document</span>
+              </li>
+              <li className="flex items-start gap-3 text-sm text-slate-300">
+                <Search size={18} className="text-indigo-400 shrink-0" />
+                <span><strong className="text-slate-100">Extract</strong> — Structured entities</span>
+              </li>
+              <li className="flex items-start gap-3 text-sm text-slate-300">
+                <LayoutDashboard size={18} className="text-indigo-400 shrink-0" />
+                <span><strong className="text-slate-100">Analyze</strong> — Gaps & fit logic</span>
+              </li>
+              <li className="flex items-start gap-3 text-sm text-slate-300">
+                <Settings size={18} className="text-indigo-400 shrink-0" />
+                <span><strong className="text-slate-100">Grade</strong> — 100% LLM Scored</span>
+              </li>
             </ul>
           </div>
 
-          <div className="sidebar-footer">
+          <div className="mt-auto pt-6 border-t border-slate-800 text-xs text-slate-500 leading-relaxed">
             Powered by LangGraph & FastAPI<br/>
             Engine: Llama 3.3
           </div>
         </aside>
 
         {/* ── Main Content ── */}
-        <main className="main">
-          <div className="page-header">
-            <h1 className="page-title">Candidate Evaluation Workspace</h1>
-            <p className="page-subtitle">Supply criteria and candidatures algorithms to generate a ranked shortlist.</p>
+        <main className="flex-1 p-12 lg:p-16 overflow-y-auto">
+          <div className="mb-10">
+            <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Candidate Evaluation Workspace</h1>
+            <p className="text-slate-500 mt-2 text-base">Supply criteria and candidatures algorithms to generate a ranked shortlist.</p>
           </div>
 
-          <div className="input-grid">
+          <div className="grid lg:grid-cols-2 gap-10">
             {/* JD Input */}
             <div>
-              <div className="section-label">
-                <FileBox size={18} /> Position Criteria (Job Description)
+              <div className="flex items-center gap-2 text-sm font-bold text-slate-700 mb-3">
+                <FileBox size={18} className="text-slate-400" /> Position Criteria (Job Description)
               </div>
               <textarea
+                className="w-full h-64 p-5 border border-slate-300 rounded-xl bg-white shadow-sm focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all text-sm leading-relaxed placeholder:text-slate-400"
                 placeholder="Paste the full job description here...&#10;&#10;E.g., We require a Senior Engineer proficient in Python, SQL, and AWS infrastructure."
                 value={jdText}
                 onChange={e => setJdText(e.target.value)}
               />
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.4rem' }}>
-                <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+              <div className="flex justify-between mt-2 px-1">
+                <span className="text-xs font-medium text-slate-400">
                   {jdText.trim().length} / {MIN_JD_LENGTH} characters min.
                 </span>
                 {jdTooShort && (
-                  <span style={{ color: '#f59e0b', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <span className="flex items-center gap-1.5 text-xs font-bold text-amber-500">
                     <AlertTriangle size={12} /> Input too brief
                   </span>
                 )}
@@ -243,42 +273,53 @@ export default function App() {
 
             {/* Resume Upload Dropzone */}
             <div>
-              <div className="section-label">
-                <Users size={18} /> Candidate Documentation
+              <div className="flex items-center gap-2 text-sm font-bold text-slate-700 mb-3">
+                <Users size={18} className="text-slate-400" /> Candidate Documentation
               </div>
               <div
-                className={`dropzone ${isDrag ? 'active' : ''}`}
+                className={`w-full h-64 border-2 border-dashed rounded-xl bg-white flex flex-col items-center justify-center p-6 text-center cursor-pointer transition-all duration-200 ${
+                  isDrag ? 'border-indigo-500 bg-indigo-50' : 'border-slate-300 hover:border-indigo-400 hover:bg-slate-50'
+                }`}
                 onDragOver={e => { e.preventDefault(); setIsDrag(true) }}
                 onDragLeave={() => setIsDrag(false)}
                 onDrop={handleDrop}
                 onClick={() => fileRef.current.click()}
               >
-                <input ref={fileRef} type="file" multiple accept=".pdf,.docx" style={{ display: 'none' }} onChange={handleFileInput} />
+                <input ref={fileRef} type="file" multiple accept=".pdf,.docx" className="hidden" onChange={e => { addFiles(Array.from(e.target.files)); e.target.value = '' }} />
 
                 {files.length === 0 ? (
                   <>
-                    <UploadCloud size={40} className="dropzone-icon" />
-                    <p>Drag files here or <strong>click to browse</strong></p>
-                    <span style={{ color: '#94a3b8', fontSize: '0.8rem' }}>Supported: PDF, DOCX (Max 10MB)</span>
+                    <UploadCloud size={44} className="text-slate-300 mb-3" />
+                    <p className="text-slate-600 text-sm mb-1">Drag files here or <strong className="text-indigo-600">click to browse</strong></p>
+                    <span className="text-xs text-slate-400 font-medium">Supported: PDF, DOCX (Max 10MB)</span>
                   </>
                 ) : (
-                  <div className="file-list" onClick={e => e.stopPropagation()}>
-                    <div className="file-list-header">
-                      <CheckCircle2 size={16} /> {files.length} Document{files.length !== 1 ? 's' : ''} Staged
+                  <div className="w-full h-full overflow-y-auto pr-2" onClick={e => e.stopPropagation()}>
+                    <div className="flex items-center gap-2 text-emerald-600 font-bold text-sm mb-4 pb-2 border-b border-slate-100">
+                      <CheckCircle2 size={18} /> {files.length} Document{files.length !== 1 ? 's' : ''} Staged
                     </div>
-                    {files.map((f, i) => (
-                      <div key={i} className="file-item">
-                        <div className="file-name">
-                          <FileText size={14} color="#64748b" /> {f.name}
-                          <span className="file-size">({(f.size / 1024).toFixed(0)} KB)</span>
+                    <div className="flex flex-col gap-2 mb-4">
+                      {files.map((f, i) => (
+                        <div key={i} className="flex justify-between items-center p-2.5 bg-slate-50 border border-slate-100 rounded-lg hover:border-slate-200 transition-colors">
+                          <div className="flex items-center gap-2.5 truncate">
+                            <FileText size={16} className="text-slate-400 shrink-0" /> 
+                            <span className="text-sm font-medium text-slate-700 truncate">{f.name}</span>
+                            <span className="text-xs text-slate-400 shrink-0">({(f.size / 1024).toFixed(0)} KB)</span>
+                          </div>
+                          <button 
+                            className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors" 
+                            onClick={() => setFiles(prev => prev.filter((_, j) => j !== i))}
+                          >
+                            <X size={14} />
+                          </button>
                         </div>
-                        <button className="file-remove" onClick={() => setFiles(prev => prev.filter((_, j) => j !== i))}>
-                          <X size={14} />
-                        </button>
-                      </div>
-                    ))}
-                    <button className="add-more-btn" onClick={(e) => { e.stopPropagation(); fileRef.current.click() }}>
-                      <Plus size={14} /> Append Files
+                      ))}
+                    </div>
+                    <button 
+                      className="flex items-center justify-center gap-2 w-full py-2.5 bg-white border border-slate-200 shadow-sm text-sm font-semibold text-slate-600 rounded-lg hover:bg-slate-50 hover:text-indigo-600 transition-colors" 
+                      onClick={(e) => { e.stopPropagation(); fileRef.current.click() }}
+                    >
+                      <Plus size={16} /> Append Files
                     </button>
                   </div>
                 )}
@@ -286,46 +327,51 @@ export default function App() {
             </div>
           </div>
 
-          <hr className="divider" />
+          <hr className="my-10 border-t border-slate-200" />
 
-          <button className="btn-primary" onClick={handleAnalyze} disabled={!canRun}>
+          <button 
+            className={`flex items-center justify-center gap-2.5 px-8 py-3.5 rounded-xl font-bold text-sm shadow-sm transition-all duration-200 ${canRun ? 'bg-indigo-600 text-white hover:bg-indigo-700 hover:shadow-md hover:-translate-y-0.5' : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'}`} 
+            onClick={handleAnalyze} 
+            disabled={!canRun}
+          >
             {loading ? <Activity className="animate-spin" size={18} /> : <BrainCircuit size={18} />}
             {loading ? 'Processing Candidates...' : 'Run Pipeline'}
           </button>
 
           {!canRun && !loading && (
-            <p style={{ fontSize: '0.85rem', color: '#64748b', marginTop: '0.75rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-              <AlertCircle size={14} />
-              {jdText.trim().length < MIN_JD_LENGTH ? 'Provide position criteria.' : 'Upload candidate documentation.'}
+            <p className="flex items-center gap-2 text-sm font-medium text-slate-500 mt-4">
+              <AlertCircle size={16} className="text-slate-400" />
+              {jdText.trim().length < MIN_JD_LENGTH ? 'Provide position criteria to initiate.' : 'Upload candidate documentation to initiate.'}
             </p>
           )}
 
           {loading && <LoadingSkeleton count={files.length || 2} />}
 
-          {status && !loading && (
-            <div className="status-bar">
-              <CheckCircle2 size={18} /> {status}
+          {status && !loading && !error && (
+            <div className="flex items-center gap-2.5 bg-indigo-50/80 border border-indigo-100 text-indigo-700 px-5 py-3.5 mt-6 rounded-xl text-sm font-semibold shadow-sm">
+              <CheckCircle2 size={18} className="text-indigo-500" /> {status}
             </div>
           )}
 
           {error && (
-            <div className="error-box">
-              <AlertCircle size={18} />
+            <div className="flex items-start gap-3 bg-red-50 border border-red-100 text-red-800 px-5 py-4 mt-6 rounded-xl text-sm shadow-sm">
+              <AlertCircle size={20} className="text-red-500 shrink-0 mt-0.5" />
               <div>
-                <strong>Pipeline Exception</strong>
-                <p style={{ marginTop: '0.2rem' }}>{error}</p>
+                <strong className="block font-bold mb-1">Pipeline Exception</strong>
+                <p className="text-red-700/90 leading-relaxed">{error}</p>
               </div>
             </div>
           )}
 
           {/* ── Results Container ── */}
           {results && !loading && (
-            <div style={{ marginTop: '3rem' }}>
-              <div className="section-label" style={{ marginBottom: '1.5rem', fontSize: '1.25rem', color: '#0f172a' }}>
-                <UserCheck size={24} /> Evaluation Output
+            <div className="mt-14 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="flex items-center gap-3 text-xl font-extrabold text-slate-900 mb-6">
+                <UserCheck size={26} className="text-indigo-500" /> Evaluation Output
               </div>
 
-              <div className="metrics-grid">
+              {/* Metrics */}
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-10">
                 {[
                   ['Volume', results.total],
                   ['Median Score', `${results.avg_score}`],
@@ -333,48 +379,65 @@ export default function App() {
                   ['Partial Fit', results.moderate_fits],
                   ['Unqualified', results.not_fits],
                 ].map(([label, value]) => (
-                  <div key={label} className="metric-card">
-                    <div className="value">{value}</div>
-                    <div className="label">{label}</div>
+                  <div key={label} className="bg-white border border-slate-200 rounded-xl p-5 flex flex-col items-center justify-center shadow-sm">
+                    <div className="text-3xl font-black tracking-tight text-slate-900">{value}</div>
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mt-1">{label}</div>
                   </div>
                 ))}
               </div>
 
-              <div className="results-table-container">
-                <table className="results-table">
-                  <thead>
-                    <tr>{['Rank', 'Candidate', 'Source Document', 'Score', 'Status', 'Technical Fit'].map(h => <th key={h}>{h}</th>)}</tr>
-                  </thead>
-                  <tbody>
-                    {results.candidates.map(c => (
-                      <tr key={c.file_name}>
-                        <td>
-                          <span className={`rank-badge ${c.ranking === 1 ? 'top-rank' : ''}`}>{c.ranking}</span>
-                        </td>
-                        <td className="candidate-name">{c.name}</td>
-                        <td style={{ color: '#64748b', fontSize: '0.85rem' }}>{c.file_name}</td>
-                        <td>
-                          <span className={`score-pill ${scoreClass(c.match_score)}`}>{c.match_score}</span>
-                        </td>
-                        <td><RecLabel rec={c.recommendation} /></td>
-                        <td>{c.llm_score}/100</td>
+              {/* Table */}
+              <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden mb-6">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm">
+                    <thead>
+                      <tr className="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500 font-bold">
+                        <th className="px-6 py-4">Rank</th>
+                        <th className="px-6 py-4">Candidate</th>
+                        <th className="px-6 py-4">Source Document</th>
+                        <th className="px-6 py-4">Score</th>
+                        <th className="px-6 py-4">Status</th>
+                        <th className="px-6 py-4">Tech Fit</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {results.candidates.map(c => (
+                        <tr key={c.file_name} className="hover:bg-slate-50/50 transition-colors">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`inline-flex items-center justify-center w-7 h-7 rounded-md font-bold text-xs ${c.ranking === 1 ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-600'}`}>
+                              {c.ranking}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 font-bold text-slate-900">{c.name}</td>
+                          <td className="px-6 py-4 text-slate-500 text-xs">{c.file_name}</td>
+                          <td className="px-6 py-4">
+                            <span className={`inline-flex items-center px-2 py-1 rounded font-bold text-xs ${scoreColor(c.match_score)}`}>
+                              {c.match_score}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4"><RecLabel rec={c.recommendation} /></td>
+                          <td className="px-6 py-4 font-medium text-slate-700">{c.llm_score}/100</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
 
-              <button className="btn-outline" onClick={() => downloadCSV(results.candidates)}>
-                <Download size={16} /> Export Data (CSV)
+              <button 
+                className="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-white border border-slate-200 shadow-sm text-sm font-semibold text-slate-700 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-all"
+                onClick={() => downloadCSV(results.candidates)}
+              >
+                <Download size={16} className="text-slate-400" /> Export Data (CSV)
               </button>
 
-              <hr className="divider" style={{ marginTop: '3rem', marginBottom: '2rem' }} />
+              <hr className="my-12 border-t border-slate-200" />
               
-              <div className="section-label" style={{ marginBottom: '1rem' }}>
-                <Search size={18} /> Contextual Analysis
+              <div className="flex items-center gap-2.5 text-lg font-extrabold text-slate-900 mb-6">
+                <Search size={22} className="text-slate-400" /> Contextual Analysis
               </div>
               
-              <div className="candidate-cards">
+              <div className="flex flex-col gap-4">
                 {results.candidates.map((c, i) => (
                   <CandidateCard key={c.file_name + i} candidate={c} defaultOpen={i === 0} />
                 ))}
